@@ -27,13 +27,38 @@ async function run() {
         await client.connect();
 
         const userCollection = client.db("jobLinkerDB").collection("users");
-        
+        const reviewCollection = client.db("jobLinkerDB").collection("reviews");
+
 
         // User related API's
+        // Store User Info
         app.post('/users', async (req, res) => {
-            const user = req.body;
-            const result = await userCollection.insertOne(user);
+            try {
+                const { name, email, role, coins } = req.body;
 
+                const existingUser = await userCollection.findOne({ email });
+
+                if (existingUser) {
+
+                    return res.status(403).json({ success: false, message: 'User already exists' });
+                }
+
+                const result = await userCollection.insertOne({ name, email, role, coins });
+
+                res.send(result);
+            }
+            catch (error) {
+                console.error(error);
+
+            }
+
+        });
+
+
+        // Get all reviews
+        app.get('/reviews', async (req, res) => {
+
+            const result = await reviewCollection.find().toArray();
             res.send(result);
         })
 
