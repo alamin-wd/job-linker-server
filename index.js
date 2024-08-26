@@ -85,8 +85,26 @@ async function run() {
             }
         });
 
+        // Update user role
+        app.patch('/users/:id/role', async (req, res) => {
 
-       
+            const userId = req.params.id;
+            const { role } = req.body;
+
+            const user = { _id: new ObjectId(userId) }
+            const newRole = { $set: { role: role } }
+
+            try {
+                const result = await userCollection.updateOne(user, newRole);
+
+                res.send(result)
+            }
+            catch (error) {
+                
+                console.error("Error updating user role:", error);
+            }
+        });
+
 
         // Get all reviews
         app.get('/reviews', async (req, res) => {
