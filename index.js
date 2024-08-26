@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const cors = require('cors');
@@ -31,10 +31,11 @@ async function run() {
 
 
         // User related API's
+
         // Store User Info
         app.post('/users', async (req, res) => {
             try {
-                const { name, email, role, coins } = req.body;
+                const { name, email, photo, role, coins } = req.body;
 
                 const existingUser = await userCollection.findOne({ email });
 
@@ -43,7 +44,7 @@ async function run() {
                     return res.status(403).json({ success: false, message: 'User already exists' });
                 }
 
-                const result = await userCollection.insertOne({ name, email, role, coins });
+                const result = await userCollection.insertOne({ name, email, photo, role, coins });
 
                 res.send(result);
             }
@@ -54,6 +55,38 @@ async function run() {
 
         });
 
+        // Get all users
+        app.get('/users/workers', async (req, res) => {
+
+            const workers = { role: 'Worker' }
+            try {
+                const result = await userCollection.find(workers).toArray();
+                res.send(result);
+            }
+            catch (error) {
+                res.status(500).send({ message: 'Error fetching workers' });
+            }
+        });
+
+        // Delete User
+        app.delete('/users/:id', async (req, res) => {
+
+            const userId = req.params.id;
+            const query = { _id: new ObjectId(userId) }
+
+            try {
+                const result = await userCollection.deleteOne(query);
+
+                res.send(result);
+            }
+            catch (error) {
+                console.error("Error deleting user:", error);
+                res.status(500).json({ message: 'Failed to delete user', error });
+            }
+        });
+
+
+       
 
         // Get all reviews
         app.get('/reviews', async (req, res) => {
@@ -66,11 +99,13 @@ async function run() {
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } finally {
+    }
+    finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
     }
 }
+
 run().catch(console.dir);
 
 
