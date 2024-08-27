@@ -56,6 +56,17 @@ async function run() {
         });
 
         // Get all users
+        app.get('/users', async (req, res) => {
+
+            try {
+                const result = await userCollection.find().toArray();
+                res.send(result);
+            }
+            catch (error) {
+                res.status(500).send({ message: 'Error fetching workers' });
+            }
+        });
+
         app.get('/users/workers', async (req, res) => {
 
             const workers = { role: 'Worker' }
@@ -67,6 +78,21 @@ async function run() {
                 res.status(500).send({ message: 'Error fetching workers' });
             }
         });
+
+        // Get user role by email
+        app.get('/user/:email', async (req, res) => {
+
+            const email = req.params.email;
+            
+            try{
+                const result = await userCollection.findOne({ email })
+                res.send(result);
+            }
+            catch (error) {
+                res.status(500).send({ message: 'Error fetching User Role' });
+            }
+            
+        })
 
         // Delete User
         app.delete('/users/:id', async (req, res) => {
@@ -100,7 +126,7 @@ async function run() {
                 res.send(result)
             }
             catch (error) {
-                
+
                 console.error("Error updating user role:", error);
             }
         });
