@@ -28,6 +28,7 @@ async function run() {
 
         const userCollection = client.db("jobLinkerDB").collection("users");
         const reviewCollection = client.db("jobLinkerDB").collection("reviews");
+        const taskCollection = client.db("jobLinkerDB").collection("tasks");
 
 
         // User related API's
@@ -83,15 +84,15 @@ async function run() {
         app.get('/user/:email', async (req, res) => {
 
             const email = req.params.email;
-            
-            try{
+
+            try {
                 const result = await userCollection.findOne({ email })
                 res.send(result);
             }
             catch (error) {
                 res.status(500).send({ message: 'Error fetching User Role' });
             }
-            
+
         })
 
         // Delete User
@@ -128,6 +129,18 @@ async function run() {
             catch (error) {
 
                 console.error("Error updating user role:", error);
+            }
+        });
+
+        // Get All Tasks
+        app.get('/tasks', async (req, res) => {
+
+            try {
+                const result = await taskCollection.find().toArray();
+                res.send(result);
+            }
+            catch (error) {
+                res.status(500).send({ message: 'Error fetching workers' });
             }
         });
 
