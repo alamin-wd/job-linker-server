@@ -292,6 +292,92 @@ async function run() {
             }
         });
 
+        // Get Tasks by Worker Email
+        app.get('/submissions', async (req, res) => {
+
+            try {
+                const creatorEmail = req.query.creatorEmail;
+
+                const query = { creator_email: creatorEmail };
+
+                if (!creatorEmail) {
+
+                    return res.status(400).json({ success: false, message: 'creator email is required' });
+                }
+
+                const result = await taskCollection.find(query).toArray();
+
+                return res.status(200).json({ success: true, data: result });
+            }
+            catch (error) {
+                console.error('Error retrieving tasks:', error);
+
+                return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+        });
+
+        app.patch('/tasks/:id', async (req, res) => {
+            const { id } = req.params;
+            const { task_title, task_detail, submission_info } = req.body;
+
+            try {
+                // Validate input
+                if (!task_title || !task_detail || !submission_info) {
+                    return res.status(400).send({ error: 'All fields are required' });
+                }
+
+                // Update the task
+                const result = await taskCollection.updateOne(
+                    { _id: new ObjectId(id) },
+                    {
+                        $set: {
+                            task_title,
+                            task_detail,
+                            submission_info
+                        }
+                    }
+                );
+
+                if (result.modifiedCount === 0) {
+                    return res.status(404).send({ error: 'Task not found or no changes made' });
+                }
+
+                res.send({ message: 'Task updated successfully' });
+            }
+            catch (error) {
+                console.error('Error updating task:', error);
+                res.status(500).send({ error: 'Internal Server Error' });
+            }
+        });
+
+        app.delete('/tasks/:id', async (req, res) => {
+            const { id } = req.params;
+            const userId = req.user.id;
+            const query = { _id: new ObjectId(id) }
+
+            try {
+
+                const result = await taskCollection.findOneAndDelete(query);
+
+                if (!result.value) {
+                    return res.status(404).send({ error: 'Task not found' });
+                }
+
+                const totalAmount = result.value.task_quantity * result.value.payable_amount;
+
+                // Update the user's available coins
+                await userCollection.updateOne(
+                    { _id: new ObjectId(userId) },
+                    { $inc: { available_coins: totalAmount } }
+                );
+
+                res.send({ message: 'Task deleted and coins updated' });
+            } 
+            catch (error) {
+                console.error('Error deleting task:', error);
+                res.status(500).send({ error: 'Internal Server Error' });
+            }
+        });
 
 
         // Get all reviews
