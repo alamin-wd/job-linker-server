@@ -192,6 +192,30 @@ async function run() {
             }
         });
 
+        // Get Submissions by Worker Email
+        app.get('/submissions', async (req, res) => {
+
+            try {
+                const workerEmail = req.query.workerEmail;
+
+                const query = { worker_email: workerEmail };
+
+                if (!workerEmail) {
+
+                    return res.status(400).json({ success: false, message: 'Worker email is required' });
+                }
+
+                const result = await submissionCollection.find(query).toArray();
+
+                return res.status(200).json({ success: true, data: result });
+            } 
+            catch (error) {
+                console.error('Error retrieving submissions:', error);
+
+                return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+        });
+
 
         // Get all reviews
         app.get('/reviews', async (req, res) => {
