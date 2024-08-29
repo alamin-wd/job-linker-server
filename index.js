@@ -29,6 +29,7 @@ async function run() {
         const userCollection = client.db("jobLinkerDB").collection("users");
         const reviewCollection = client.db("jobLinkerDB").collection("reviews");
         const taskCollection = client.db("jobLinkerDB").collection("tasks");
+        const submissionCollection = client.db("jobLinkerDB").collection("submissions");
 
 
         // User related API's
@@ -141,6 +142,53 @@ async function run() {
             }
             catch (error) {
                 res.status(500).send({ message: 'Error fetching workers' });
+            }
+        });
+
+        // Post Submissions
+        app.post('/submissions', async (req, res) => {
+            try {
+                const {
+                    task_id,
+                    task_title,
+                    task_detail,
+                    task_img,
+                    payable_amount,
+                    worker_email,
+                    submission_details,
+                    worker_name,
+                    creator_name,
+                    creator_email,
+                    current_date,
+                    status,
+                } = req.body;
+
+                const result = await submissionCollection.insertOne({
+                    task_id,
+                    task_title,
+                    task_detail,
+                    task_img,
+                    payable_amount,
+                    worker_email,
+                    submission_details,
+                    worker_name,
+                    creator_name,
+                    creator_email,
+                    current_date,
+                    status,
+                });
+
+                if (result.insertedId) {
+
+                    return res.status(201).json({ success: true, message: 'Submission successful' });
+                }
+
+            }
+            catch (error) {
+
+                console.error('Error inserting submission:', error.stack || error.message);
+
+                return res.status(500).json({ success: false, message: 'Internal server error' });
             }
         });
 
