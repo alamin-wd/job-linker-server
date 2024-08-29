@@ -145,6 +145,41 @@ async function run() {
             }
         });
 
+        // Add Task
+        app.post('/tasks', async (req, res) => {
+
+            const taskInfo = req.body;
+
+            try {
+
+                const result = await taskCollection.insertOne(taskInfo);
+
+                res.status(201).send({ message: 'Task created successfully', taskId: result.insertedId });
+            }
+            catch (error) {
+                console.error('Error adding task:', error);
+                res.status(500).send({ error: 'Failed to create task' });
+            }
+        });
+
+
+        // Delete Task
+        app.delete('/tasks/:id', async (req, res) => {
+
+            const userId = req.params.id;
+            const query = { _id: new ObjectId(userId) }
+
+            try {
+                const result = await taskCollection.deleteOne(query);
+
+                res.send(result);
+            }
+            catch (error) {
+                console.error("Error deleting this task:", error);
+                res.status(500).json({ message: 'Failed to delete this task', error });
+            }
+        });
+
         // Post Submissions
         app.post('/submissions', async (req, res) => {
             try {
@@ -208,13 +243,55 @@ async function run() {
                 const result = await submissionCollection.find(query).toArray();
 
                 return res.status(200).json({ success: true, data: result });
-            } 
+            }
             catch (error) {
                 console.error('Error retrieving submissions:', error);
 
                 return res.status(500).json({ success: false, message: 'Internal server error' });
             }
         });
+
+        // Post Withdrawal
+        app.post('/withdrawals', async (req, res) => {
+            try {
+                const {
+                    worker_email,
+                    worker_name,
+                    withdraw_coin,
+                    withdraw_amount,
+                    payment_system,
+                    account_number,
+                    withdraw_time,
+                } = req.body;
+
+                // Validation
+                if (!worker_email || !worker_name || !withdraw_coin || !withdraw_amount || !payment_system || !account_number) {
+                    return res.status(400).json({ success: false, message: 'Missing required fields' });
+                }
+
+                // Insert the document into the collection
+                const result = await withdrawCollection.insertOne({
+                    worker_email,
+                    worker_name,
+                    withdraw_coin,
+                    withdraw_amount,
+                    payment_system,
+                    account_number,
+                    withdraw_time,
+                });
+
+                // Check if the insert was successful
+                if (result.insertedCount === 1) {
+                    return res.status(201).json({ success: true, message: 'Withdrawal request successful' });
+                } else {
+                    return res.status(500).json({ success: false, message: 'Failed to process withdrawal request' });
+                }
+            } catch (error) {
+                console.error('Error processing withdrawal:', error);
+                return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+        });
+
 
 
         // Get all reviews
