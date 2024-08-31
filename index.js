@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const userCollection = client.db("jobLinkerDB").collection("users");
         const reviewCollection = client.db("jobLinkerDB").collection("reviews");
@@ -33,7 +33,6 @@ async function run() {
 
 
         // User related API's
-
         // Store User Info
         app.post('/users', async (req, res) => {
             try {
@@ -227,8 +226,20 @@ async function run() {
             }
         });
 
-        // Get Submissions by Worker Email
+        // Get All submissions
         app.get('/submissions', async (req, res) => {
+
+            try {
+                const result = await submissionCollection.find().toArray();
+                res.send(result);
+            }
+            catch (error) {
+                res.status(500).send({ message: 'Error fetching submissions' });
+            }
+        });
+
+        // Get Submissions by Worker Email
+        app.get('/submission', async (req, res) => {
 
             try {
                 const workerEmail = req.query.workerEmail;
@@ -372,7 +383,7 @@ async function run() {
                 );
 
                 res.send({ message: 'Task deleted and coins updated' });
-            } 
+            }
             catch (error) {
                 console.error('Error deleting task:', error);
                 res.status(500).send({ error: 'Internal Server Error' });
